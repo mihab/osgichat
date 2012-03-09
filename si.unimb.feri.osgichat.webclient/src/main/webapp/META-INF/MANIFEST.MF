@@ -1,0 +1,15 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-SymbolicName: si.unimb.feri.osgichat.webclient
+Bundle-Name: webclient
+Bundle-Version: 1.0.0
+Web-ContextPath: /webclient
+Import-Library: org.springframework.spring;version="[3.0.0.RELEASE,3.0.0.RELEASE]"
+Import-Bundle: org.eclipse.virgo.web.dm;version="[3.0.0.M02,3.0.0.M02]",
+ org.springframework.flex;version="[1.0.3.RELEASE,1.0.3.RELEASE]",
+ com.springsource.flex.messaging;version="[3.2.0.3978,3.2.0.3978]",
+ com.springsource.flex.messaging.common;version="[3.2.0.3978,3.2.0.3978]",
+ com.springsource.flex.messaging.services.remoting;version="[3.2.0.3978,3.2.0.3978]",
+ com.springsource.net.sf.cglib;version="[2.2.0,2.2.0]"
+Import-Package: si.unimb.feri.osgichat;version="[1.0.0,1.0.0]"
+

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!---
+Ignored users tite window to use with web and desktop. Contains list of ignored users and controls to add/remove users to the list
+-->
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+			   xmlns:sf="http://www.spicefactory.org/parsley"
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx" title="Ignored Users" close="PopUpManager.removePopUp(this);">
+	<fx:Script>
+		<![CDATA[
+			import si.unimb.feri.osgichat.model.ChatModel;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			import mx.rpc.events.ResultEvent;
+			
+			import si.unimb.feri.osgichat.model.ChatModel;
+			import si.unimb.feri.osgichat.events.IgnoreUserEvent;
+			import si.unimb.feri.osgichat.events.UnignoreUserEvent;
+			
+			[MessageDispatcher]
+			public var dispatcher:Function;
+			
+			[Bindable]
+			[Inject]
+			public var chatModel:ChatModel;
+
+			protected function ignoreUser_clickHandler(event:MouseEvent):void{
+				if(textInput.text.length==0)return;
+				if(chatModel.nickname == textInput.text || chatModel.ignoredUsers.contains(textInput.text))return;
+				dispatcher(new IgnoreUserEvent(textInput.text));
+				textInput.text = "";
+				ignore.enabled = false;
+			}
+
+			protected function unignore_clickHandler(event:MouseEvent):void{
+				if(list.selectedItem == null)return;
+				dispatcher(new UnignoreUserEvent(list.selectedItem));
+			}
+
+			protected function textInput_enterHandler(event:FlexEvent):void{
+				if(textInput.text.length==0)return;
+				if(chatModel.nickname == textInput.text || chatModel.ignoredUsers.contains(textInput.text))return;
+				dispatcher(new IgnoreUserEvent(textInput.text));
+				textInput.text = "";
+				ignore.enabled = false;
+			}
+
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<sf:Configure/>
+	</fx:Declarations>
+	<s:layout>
+		<s:VerticalLayout paddingBottom="5" paddingTop="5" paddingLeft="5" paddingRight="5"/>
+	</s:layout>
+	<s:List id="list" width="100%" dataProvider="{chatModel.ignoredUsers}" height="100"/>		
+	<s:HGroup>
+		<s:Button label="Unignore" click="unignore_clickHandler(event)"/>
+		<s:TextInput id="textInput" change="(textInput.text.length>0)?ignore.enabled=true:ignore.enabled=false" enter="textInput_enterHandler(event)"/>
+		<s:Button id="ignore" label="Ignore" click="ignoreUser_clickHandler(event)" enabled="false"/>
+	</s:HGroup>
+</s:TitleWindow>

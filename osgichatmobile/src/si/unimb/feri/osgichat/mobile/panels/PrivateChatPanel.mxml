@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!---
+Mobile private chat panel to with a text area and text input with send button to send messages to another user.
+-->
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+		 xmlns:sf="http://www.spicefactory.org/parsley"
+		 xmlns:s="library://ns.adobe.com/flex/spark" width="100%" height="100%">
+	<fx:Script>
+		<![CDATA[
+			import si.unimb.feri.osgichat.model.ChatModel;
+			import si.unimb.feri.osgichat.events.PrivateMessageEvent;
+			
+			[MessageDispatcher]
+			public var dispatcher:Function;
+			
+			[Inject]
+			public var chatModel:ChatModel;
+			
+			public function set startMessage(value:String):void{
+				textArea.appendText(value);
+			}
+			
+			[MessageHandler(selector="receive")]
+			public function privateMessageReceived(event:PrivateMessageEvent):void{
+				if(event.nickname != nickname)return;
+				textArea.appendText("\n");
+				textArea.appendText(event.nickname+":"+event.message);
+			}
+
+			protected function send_clickHandler(event:MouseEvent):void{
+				if(textInput.text.length==0)return;
+				dispatcher(new PrivateMessageEvent("send",nickname,textInput.text));
+				textArea.appendText("\n");
+				textArea.appendText(chatModel.nickname+":"+textInput.text);
+				textInput.text = "";
+			}
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<fx:String id="nickname"/>
+		<sf:Configure/>
+	</fx:Declarations>
+	<fx:Metadata>
+		[Event(name="privateChatClose", type="flash.events.Event")]
+	</fx:Metadata>
+	<s:VGroup width="100%" height="100%">
+		<s:TextArea id="textArea" width="100%" height="100%" editable="false"/>
+		<s:HGroup width="100%" verticalAlign="middle">
+			<s:Button label="Close" click="dispatchEvent(new Event('privateChatClose'));"/>
+			<s:TextInput id="textInput" width="100%"/>
+			<s:Button label="Send" click="send_clickHandler(event)"/>
+		</s:HGroup>
+	</s:VGroup>
+</s:Group>

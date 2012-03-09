@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!---
+Generic input title window to retrieve a single line of user input to be used with web and desktop applications.
+-->
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx" close="PopUpManager.removePopUp(this);">
+	<fx:Script>
+		<![CDATA[
+			import mx.managers.PopUpManager;
+			
+			protected function ok_clickHandler(event:MouseEvent):void{
+				if(textInput.text.length==0){
+					return;
+				}
+				textEntered = textInput.text;
+				PopUpManager.removePopUp(this);
+				dispatchEvent(new Event("textEntered"));
+			}
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<fx:String id="popupText"/>
+		<fx:String id="textEntered"/>
+	</fx:Declarations>
+	<fx:Metadata>
+		[Event(name="textEntered", type="flash.events.Event")]
+	</fx:Metadata>
+	<s:layout>
+		<s:VerticalLayout horizontalAlign="center" paddingTop="5" paddingLeft="5" paddingRight="5" paddingBottom="5"/>
+	</s:layout>
+	<mx:Grid>
+		<mx:GridRow>
+			<mx:GridItem verticalAlign="middle">
+				<s:Label text="{popupText}"/>
+			</mx:GridItem>
+			<mx:GridItem>
+				<s:TextInput id="textInput"/>
+			</mx:GridItem>
+		</mx:GridRow>
+		<mx:GridRow>
+			<mx:GridItem horizontalAlign="right">
+				<s:Button label="OK" click="ok_clickHandler(event)"/>
+			</mx:GridItem>
+			<mx:GridItem horizontalAlign="left">
+				<s:Button label="Cancel" click="PopUpManager.removePopUp(this);"/>
+			</mx:GridItem>
+		</mx:GridRow>
+	</mx:Grid>
+</s:TitleWindow>

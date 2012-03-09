@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!---
+Mobile channel panel for single channel with a messages text area, subscribers list and text input with send button to
+send new messages to channel
+-->
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:sf="http://www.spicefactory.org/parsley"
+		 xmlns:s="library://ns.adobe.com/flex/spark" width="100%" height="100%">
+	<fx:Script>
+		<![CDATA[
+			import si.unimb.feri.osgichat.model.ChatModel;
+			import si.unimb.feri.osgichat.events.ChannelMessageEvent;
+			import si.unimb.feri.osgichat.events.ChannelSubscribersEvent;
+			
+			[MessageDispatcher]
+			public var dispatcher:Function;
+			
+			[Inject]
+			public var chatModel:ChatModel;
+			
+			[MessageHandler(selector="receive")]
+			public function channelMessageReceived(event:ChannelMessageEvent):void{
+				if(event.channel != channel)return;
+				textArea.appendText("\n");
+				textArea.appendText(event.nickname+":"+event.message);
+			}
+			
+			[MessageHandler]
+			public function channelSubscribers(event:ChannelSubscribersEvent):void{
+				if(event.channel != channel)return;
+				subscribers.source = event.subscribers;
+				subscribers.refresh();
+			}
+
+			protected function send_clickHandler(event:MouseEvent):void{
+				if(textInput.text.length==0)return;
+				dispatcher(new ChannelMessageEvent("send",channel,chatModel.nickname,textInput.text));
+				textInput.text = "";
+			}
+
+			protected function list_clickHandler(event:MouseEvent):void{
+				if(list.selectedItem == null)return;
+				lastNickname = list.selectedItem;
+				dispatchEvent(new Event("startPrivateChat"));
+			}
+
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<fx:String id="channel"/>
+		<fx:String id="lastNickname"/>
+		<s:ArrayCollection id="subscribers"/>
+		<sf:Configure/>
+	</fx:Declarations>
+	<fx:Metadata>
+		[Event(name="channelClose", type="flash.events.Event")]
+		[Event(name="startPrivateChat", type="flash.events.Event")]
+	</fx:Metadata>
+	<s:VGroup width="100%" height="100%">
+		<s:HGroup width="100%" height="100%">
+			<s:TextArea id="textArea" width="80%" height="100%" editable="false"/>
+			<s:List id="list" width="20%" height="100%" dataProvider="{subscribers}" click="list_clickHandler(event)"/>
+		</s:HGroup>
+		<s:HGroup width="100%" verticalAlign="middle">
+			<s:Button label="Close" click="dispatchEvent(new Event('channelClose'));"/>
+			<s:TextInput id="textInput" width="100%"/>
+			<s:Button label="Send" click="send_clickHandler(event)"/>
+		</s:HGroup>
+	</s:VGroup>
+</s:Group>

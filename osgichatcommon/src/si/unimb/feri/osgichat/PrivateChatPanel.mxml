@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!---
+Private chat panel for use with web and desktop versions, contains a text area for messages received/send to other user and
+a text input and button to send new messages to other user
+-->
+<s:NavigatorContent xmlns:fx="http://ns.adobe.com/mxml/2009"
+					xmlns:sf="http://www.spicefactory.org/parsley"
+					xmlns:s="library://ns.adobe.com/flex/spark" 
+					xmlns:mx="library://ns.adobe.com/flex/mx" width="100%" height="100%" 
+					creationComplete="if(startMessage!=null)textArea.appendText(startMessage);">
+	<fx:Script>
+		<![CDATA[
+			import si.unimb.feri.osgichat.model.ChatModel;
+			import mx.events.FlexEvent;
+			
+			import si.unimb.feri.osgichat.model.ChatModel;
+			import si.unimb.feri.osgichat.events.PrivateMessageEvent;
+			
+			[MessageDispatcher]
+			public var dispatcher:Function;
+			
+			[Inject]
+			public var chatModel:ChatModel;
+			
+			[MessageHandler(selector="receive")]
+			public function privateMessageReceived(event:PrivateMessageEvent):void{
+				textArea.appendText("\n");
+				textArea.appendText(event.nickname+":"+event.message);
+			}
+			
+			protected function send_clickHandler(event:MouseEvent):void{
+				if(textInput.text.length==0)return;
+				textArea.appendText("\n");
+				textArea.appendText(chatModel.nickname+":"+textInput.text);
+				dispatcher(new PrivateMessageEvent("send",nickname,textInput.text));
+				textInput.text = "";
+			}
+			
+			protected function textInput_enterHandler(event:FlexEvent):void{
+				if(textInput.text.length==0)return;
+				textArea.appendText("\n");
+				textArea.appendText(chatModel.nickname+":"+textInput.text);
+				dispatcher(new PrivateMessageEvent("send",nickname,textInput.text));
+				textInput.text = "";
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<fx:String id="nickname"/>
+		<fx:String id="startMessage"/>
+		<sf:Configure/>
+	</fx:Declarations>
+	<fx:Metadata>
+		[Event(name="closePanelEvent", type="flash.events.Event")]
+	</fx:Metadata>
+	<s:TitleWindow width="100%" height="100%" close="dispatchEvent(new Event('closePanelEvent'));">
+		<s:VGroup width="100%" height="100%">
+			<s:TextArea width="100%" height="100%" id="textArea"/>
+			<s:HGroup width="100%">
+				<s:TextInput width="100%" id="textInput" enter="textInput_enterHandler(event)"/>
+				<s:Button width="150" label="Send" click="send_clickHandler(event)"/>
+			</s:HGroup>
+		</s:VGroup>
+	</s:TitleWindow>
+</s:NavigatorContent>

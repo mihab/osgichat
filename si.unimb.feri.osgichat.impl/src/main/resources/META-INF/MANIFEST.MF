@@ -1,0 +1,11 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: osgichatimpl
+Bundle-SymbolicName: si.unimb.feri.osgichat.impl
+Bundle-Version: 1.0.0
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Import-Package: org.osgi.framework;version="1.5.0",
+ org.osgi.service.event;version="1.2.0",
+ si.unimb.feri.osgichat;version="[1.0.0,1.0.0]",
+ si.unimb.feri.osgichat.nickserv;version="[1.0.0,1.0.0]"
+Service-Component: OSGi-INF/component.xml

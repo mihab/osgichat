@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!---
+Mobile login view to enter desired nickname and options password
+-->
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009"
+		xmlns:sf="http://www.spicefactory.org/parsley"
+		xmlns:s="library://ns.adobe.com/flex/spark" title="Login">
+	<fx:Script>
+		<![CDATA[
+			import mx.events.FlexEvent;
+			
+			import si.unimb.feri.osgichat.model.ChatModel;
+			import si.unimb.feri.osgichat.events.LoginEvent;
+			import si.unimb.feri.osgichat.events.LogoutEvent;
+			
+			[MessageDispatcher]
+			public var dispatcher:Function;
+			
+			[Inject]
+			public var chatModel:ChatModel;
+			
+			[Init]
+			public function init():void{
+				if(chatModel.nickname != null){
+					dispatcher(new LogoutEvent());
+				}
+			}
+			
+			[CommandResult]
+			public function loginResult(id:String, trigger:LoginEvent):void {
+				navigator.pushView(si.unimb.feri.osgichat.mobile.views.Chat);
+			}
+			
+			protected function login_clickHandler(event:MouseEvent):void{
+				if(nickname.text.length==0)return;
+				if(password.text.length==0){
+					dispatcher(new LoginEvent(nickname.text));
+				}else{
+					dispatcher(new LoginEvent(nickname.text,password.text));
+				}
+			}
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<sf:Configure/>
+	</fx:Declarations>
+	<s:VGroup width="100%" height="100%" horizontalAlign="center" verticalAlign="middle">
+		<s:Label text="Nickname:"/>
+		<s:TextInput id="nickname"/>
+		<s:Label text="Password:"/>
+		<s:TextInput id="password"/>
+		<s:Button label="Login" click="login_clickHandler(event)"/>
+	</s:VGroup>
+</s:View>

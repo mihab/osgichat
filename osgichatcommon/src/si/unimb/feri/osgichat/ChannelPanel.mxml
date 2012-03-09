@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!---
+ChannelPanel to user with web and desktop components. Displays a single channel view with a messages text area,
+list of subscribers, a text input and button for sending messages to channel
+-->
+<s:NavigatorContent xmlns:fx="http://ns.adobe.com/mxml/2009"
+					xmlns:sf="http://www.spicefactory.org/parsley"
+					xmlns:s="library://ns.adobe.com/flex/spark" 
+					xmlns:mx="library://ns.adobe.com/flex/mx" width="100%" height="100%">
+	<fx:Script>
+		<![CDATA[
+			import si.unimb.feri.osgichat.model.ChatModel;
+			import mx.controls.Menu;
+			import mx.events.FlexEvent;
+			import mx.events.MenuEvent;
+			
+			import si.unimb.feri.osgichat.model.ChatModel;
+			import si.unimb.feri.osgichat.events.ChannelMessageEvent;
+			import si.unimb.feri.osgichat.events.ChannelSubscribersEvent;
+			import si.unimb.feri.osgichat.events.IgnoreUserEvent;
+			import si.unimb.feri.osgichat.events.UnignoreUserEvent;
+			
+			[MessageDispatcher]
+			public var dispatcher:Function;
+			
+			[Inject]
+			public var chatModel:ChatModel;
+			
+			[MessageHandler]
+			public function channelSubscribers(event:ChannelSubscribersEvent):void{
+				if(event.channel != channel)return;
+				subscribers.source = event.subscribers;
+				subscribers.refresh();
+			}
+			
+			[MessageHandler(selector="receive")]
+			public function channelMessageReceived(event:ChannelMessageEvent):void{
+				if(event.channel != channel)return;
+				textArea.appendText("\n");
+				textArea.appendText(event.nickname+":"+event.message);
+			}
+			
+			protected function send_clickHandler(event:MouseEvent):void{
+				if(textInput.text.length == 0)return;
+				dispatcher(new ChannelMessageEvent("send",channel,chatModel.nickname,textInput.text));
+				textInput.text = "";
+			}
+			
+			protected function textInput_enterHandler(event:FlexEvent):void{
+				if(textInput.text.length == 0)return;
+				dispatcher(new ChannelMessageEvent("send",channel,chatModel.nickname,textInput.text));
+				textInput.text = "";
+			}
+			
+			protected function list_doubleClickHandler(event:MouseEvent):void{
+				if(list.selectedItem != null){
+					lastNickname = list.selectedItem;
+					dispatchEvent(new Event("startPrivateChat"));
+				}
+			}
+			
+			protected function list_rightClickHandler(event:MouseEvent):void{
+				if(list.selectedItem != null){
+					lastNickname = list.selectedItem;
+					if(lastNickname == chatModel.nickname)return;
+					var data:ArrayCollection = new ArrayCollection();
+					var obj:Object = new Object();
+					obj.label = "Start private chat";
+					data.addItem(obj);
+					if(chatModel.registered){
+						obj = new Object();
+						if(chatModel.ignoredUsers.contains(lastNickname)){
+							obj.label = "Unignore user"
+						}else{
+							obj.label = "Ignore user";
+						}
+						data.addItem(obj);
+					}
+					var menu:Menu = Menu.createMenu(this,data,false);
+					menu.labelField = "label";
+					menu.addEventListener(MenuEvent.ITEM_CLICK, function(event:MenuEvent):void{
+						if(event.item.label == "Start private chat"){
+							dispatchEvent(new Event("startPrivateChat"));
+						}
+						if(event.item.label == "Ignore user"){
+							dispatcher(new IgnoreUserEvent(lastNickname));
+						}
+						if(event.item.label == "Unignore user"){
+							dispatcher(new UnignoreUserEvent(list.selectedItem));
+						}
+					});
+					menu.show(event.stageX,event.stageY);
+				}
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<fx:String id="channel"/>
+		<fx:String id="lastNickname"/>
+		<s:ArrayCollection id="subscribers"/>
+		<sf:Configure/>
+	</fx:Declarations>
+	<fx:Metadata>
+		[Event(name="startPrivateChat", type="flash.events.Event")]
+		[Event(name="closePanelEvent", type="flash.events.Event")]
+	</fx:Metadata>
+	<s:TitleWindow width="100%" height="100%" close="dispatchEvent(new Event('closePanelEvent'));">
+		<mx:Grid width="100%" height="100%">
+			<mx:GridRow width="100%" height="100%">
+				<mx:GridItem width="100%" height="100%">
+					<s:TextArea width="100%" height="100%" editable="false" id="textArea"/>
+				</mx:GridItem>
+				<mx:GridItem height="100%">
+					<s:List width="150" height="100%" id="list" dataProvider="{subscribers}" doubleClickEnabled="true"
+							doubleClick="list_doubleClickHandler(event)" rightClick="list_rightClickHandler(event)"/>
+				</mx:GridItem>
+			</mx:GridRow>
+			<mx:GridRow width="100%">
+				<mx:GridItem width="100%">
+					<s:TextInput width="100%" id="textInput" enter="textInput_enterHandler(event)"/>
+				</mx:GridItem>
+				<mx:GridItem>
+					<s:Button width="150" label="Send" click="send_clickHandler(event)"/>
+				</mx:GridItem>
+			</mx:GridRow>
+		</mx:Grid>
+	</s:TitleWindow>
+</s:NavigatorContent>

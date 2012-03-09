@@ -1,0 +1,8 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: nickservimpl
+Bundle-SymbolicName: si.unimb.feri.osgichat.nickserv.impl
+Bundle-Version: 1.0.0
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Import-Package: si.unimb.feri.osgichat.nickserv;version="[1.0.0,1.0.0]"
+Service-Component: OSGI-INF/component.xml

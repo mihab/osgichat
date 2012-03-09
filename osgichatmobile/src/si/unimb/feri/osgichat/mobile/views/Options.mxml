@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!---
+Mobile options view that displays different options to user based on the fact if he is registered or not
+-->
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009"
+		xmlns:sf="http://www.spicefactory.org/parsley"
+		xmlns:s="library://ns.adobe.com/flex/spark" title="Options"
+		currentState="{(chatModel.registered)?'registered':'logined'}">
+	<fx:Script>
+		<![CDATA[
+			import mx.events.FlexEvent;
+			
+			import si.unimb.feri.osgichat.model.ChatModel;
+			import si.unimb.feri.osgichat.events.LogoutEvent;
+			
+			[Bindable]
+			[Inject]
+			public var chatModel:ChatModel;
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<sf:Configure/>
+	</fx:Declarations>
+	<s:states>
+		<s:State name="logined"/>
+		<s:State name="registered"/>
+	</s:states>
+	<s:navigationContent>
+		<s:Button label="Back" click="navigator.popView();"/>
+	</s:navigationContent>
+	<s:VGroup width="100%" height="100%" horizontalAlign="center" verticalAlign="middle">
+		<s:Button label="Register nickname" includeIn="logined" click="navigator.pushView(si.unimb.feri.osgichat.mobile.views.RegisterNickname);"/>
+		<s:Button label="Change password" includeIn="registered" click="navigator.pushView(si.unimb.feri.osgichat.mobile.views.ChangePassword);"/>
+		<s:Button label="View ignored users" includeIn="registered" click="navigator.pushView(si.unimb.feri.osgichat.mobile.views.IgnoredUsers);"/>
+	</s:VGroup>
+</s:View>

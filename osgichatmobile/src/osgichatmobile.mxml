@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:MobileApplication xmlns:fx="http://ns.adobe.com/mxml/2009"
+					 xmlns:sf="http://www.spicefactory.org/parsley"
+					 xmlns:s="library://ns.adobe.com/flex/spark" firstView="si.unimb.feri.osgichat.mobile.views.Login">
+	<fx:Script>
+		<![CDATA[
+			import mx.messaging.messages.ErrorMessage;
+			import mx.rpc.events.FaultEvent;
+			
+			import si.unimb.feri.osgichat.mobile.views.Error;
+			
+			[CommandError]
+			public function fault(fault:FaultEvent) : void {
+				trace(ErrorMessage(fault.message).faultString);
+				var data:Object = new Object();
+				data.message = ErrorMessage(fault.message).faultString;
+				navigator.pushView(si.unimb.feri.osgichat.mobile.views.Error,data);
+			}
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<sf:ContextBuilder config="osgichatmobileconfig"/>
+		<sf:Configure/>
+	</fx:Declarations>
+</s:MobileApplication>

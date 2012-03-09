@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://java.sun.com/xml/ns/javaee" xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
+	id="WebApp_ID" version="2.5">
+	<display-name>osgichat</display-name>
+	<welcome-file-list>
+		<welcome-file>index.html</welcome-file>
+		<welcome-file>index.htm</welcome-file>
+	</welcome-file-list>
+	<servlet>
+		<servlet-name>equinoxbridgeservlet</servlet-name>
+		<servlet-class>org.eclipse.equinox.servletbridge.BridgeServlet</servlet-class>
+		<init-param>
+			<param-name>enableFrameworkControls</param-name>
+			<param-value>true</param-value>
+		</init-param>
+		<!-- org.eclipse.equinox.servletbridge and the Servlet API are exported 
+			automatically to the underlying OSGi framework. The extendedFrameworkExports 
+			parameter allows the specification of additional java package exports. The 
+			format is a comma separated list of exports as specified by the "Export-Package" 
+			bundle manifest header. For example: com.mycompany.exports; version=1.0.0, 
+			com.mycompany.otherexports; version=1.0.0 -->
+		<init-param>
+			<param-name>extendedFrameworkExports</param-name>
+			<param-value>si.unimb.feri.osgichat.hook; version=1.0.0,si.unimb.feri.osgichat; version=1.0.0,si.unimb.feri.osgichat.nickserv; version=1.0.0</param-value>
+		</init-param>
+
+		<!-- You can specify your own framework launcher here. The default is: 
+			org.eclipse.equinox.servletbridge.FrameworkLauncher <init-param> <param-name>frameworkLauncherClass</param-name> 
+			<param-value>org.eclipse.equinox.servletbridge.FrameworkLauncher</param-value> 
+			</init-param> -->
+		<load-on-startup>2</load-on-startup>
+	</servlet>
+
+	<!-- DISPATCHER SERVLET CONFIG -->
+	<servlet>
+		<servlet-name>flex</servlet-name>
+		<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+
+	<servlet-mapping>
+		<servlet-name>flex</servlet-name>
+		<url-pattern>/messagebroker/*</url-pattern>
+	</servlet-mapping>
+</web-app>

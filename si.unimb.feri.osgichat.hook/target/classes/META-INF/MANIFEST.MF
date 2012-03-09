@@ -1,0 +1,8 @@
+Manifest-Version: 1.0
+Bundle-Version: 1.0.0
+Bundle-Name: osgichathook
+Bundle-ManifestVersion: 2
+Bundle-SymbolicName: si.unimb.feri.osgichat.hook
+Import-Package: si.unimb.feri.osgichat;version="[1.0.0,1.0.0]",
+ si.unimb.feri.osgichat.hook;version="[1.0.0,1.0.0]"
+Service-Component: OSGI-INF/component.xml

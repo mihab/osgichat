@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!---
+Main chat component to use with desktop and web interface. Contains all other components and navigates between them.
+-->
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+		 xmlns:sf="http://www.spicefactory.org/parsley"
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 minWidth="800" minHeight="500" width="100%" height="100%" currentState="login">
+	<fx:Script>
+		<![CDATA[
+			import si.unimb.feri.osgichat.model.ChatModel;
+			import mx.collections.ArrayCollection;
+			import mx.collections.ArrayList;
+			import mx.containers.VBox;
+			import mx.controls.Alert;
+			import mx.managers.PopUpManager;
+			import mx.messaging.messages.ErrorMessage;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			
+			import org.spicefactory.parsley.core.context.Context;
+			
+			import si.unimb.feri.osgichat.model.ChatModel;
+			import si.unimb.feri.osgichat.events.ChangePasswordEvent;
+			import si.unimb.feri.osgichat.events.JoinChannelEvent;
+			import si.unimb.feri.osgichat.events.LeaveChannelEvent;
+			import si.unimb.feri.osgichat.events.LoginEvent;
+			import si.unimb.feri.osgichat.events.LogoutEvent;
+			import si.unimb.feri.osgichat.events.PrivateMessageEvent;
+			import si.unimb.feri.osgichat.events.RegisterNicknameEvent;
+			
+			[Inject]
+			public var context:Context;
+			
+			[Bindable]
+			[Inject]
+			public var chatModel:ChatModel;
+			
+			[MessageDispatcher]
+			public var dispatcher:Function;
+			
+			/**
+			 * Associative array of already joined channels
+			 */
+			private var joinedChannels:Object = new Object();
+			
+			/**
+			 * Associative array of private chats
+			 */
+			private var privateChats:Object = new Object();
+			
+			[CommandError]
+			public function loginFault(fault:FaultEvent) : void {
+				Alert.show(ErrorMessage(fault.message).faultString);
+			}
+			
+			[CommandResult]
+			public function loginResult(id:String, trigger:LoginEvent):void {
+				if(trigger.password != null){
+					currentState = "registered";
+				}
+				else{
+					currentState = "logined";
+				}
+			}
+			
+			[CommandResult]
+			public function registerNicknameResult(result:ResultEvent,trigger:RegisterNicknameEvent):void {
+				currentState = "registered";
+			}
+			
+			protected function login_clickHandler(event:MouseEvent):void{
+				if(nickname.text.length==0)return;
+				if(password.text.length>0)dispatcher(new LoginEvent(nickname.text,password.text));
+				else dispatcher(new LoginEvent(nickname.text));
+			}
+			
+			protected function logout_clickHandler(event:MouseEvent):void{
+				dispatcher(new LogoutEvent());
+			}
+			
+			[MessageHandler]
+			public function logout(event:LogoutEvent):void{
+				tabs.removeAllChildren();
+				joinedChannels = new Object();
+				privateChats = new Object();
+				currentState = "login";
+			}
+			
+			protected function registerNickname_clickHandler(event:MouseEvent):void{
+				var inputTitleWindow:InputTitleWindow = InputTitleWindow(PopUpManager.createPopUp(this,InputTitleWindow,true));
+				PopUpManager.centerPopUp(inputTitleWindow);
+				inputTitleWindow.title = "Register nickname";
+				inputTitleWindow.popupText = "Enter nickname password";
+				inputTitleWindow.addEventListener("textEntered",function(event:Event):void{
+					dispatcher(new RegisterNicknameEvent(inputTitleWindow.textEntered));
+				});
+			}
+			
+			protected function changePassword_clickHandler(event:MouseEvent):void{
+				var inputTitleWindow:InputTitleWindow = InputTitleWindow(PopUpManager.createPopUp(this,InputTitleWindow,true));
+				PopUpManager.centerPopUp(inputTitleWindow);
+				inputTitleWindow.title = "Change password";
+				inputTitleWindow.popupText = "Enter new password";
+				inputTitleWindow.addEventListener("textEntered",function(event:Event):void{
+					dispatcher(new ChangePasswordEvent(inputTitleWindow.textEntered));
+				});
+			}
+			
+			protected function viewIgnoredUsers_clickHandler(event:MouseEvent):void{
+				var ignoredUsersTitleWindow:IgnoredUsersTitleWindow = new IgnoredUsersTitleWindow();
+				context.viewManager.addViewRoot(ignoredUsersTitleWindow);
+				PopUpManager.addPopUp(ignoredUsersTitleWindow,this,true);
+				PopUpManager.centerPopUp(ignoredUsersTitleWindow);
+			}
+			
+			protected function joinChannel_clickHandler(event:MouseEvent):void{
+				var inputTitleWindow:InputTitleWindow = InputTitleWindow(PopUpManager.createPopUp(this,InputTitleWindow,true));
+				PopUpManager.centerPopUp(inputTitleWindow);
+				inputTitleWindow.title = "Join channel";
+				inputTitleWindow.popupText = "Enter channel";
+				inputTitleWindow.addEventListener("textEntered",function(event:Event):void{
+					var channel:String = inputTitleWindow.textEntered;
+					if(joinedChannels[channel] != null)return;
+					var channelPanel:ChannelPanel = new ChannelPanel();
+					channelPanel.label = "#"+channel;
+					channelPanel.channel = channel;
+					channelPanel.addEventListener("startPrivateChat",function(event:Event):void{
+						openPrivateChatPanel(event.target.lastNickname);
+					});
+					channelPanel.addEventListener("closePanelEvent",function(event:Event):void{
+						tabs.removeChild(DisplayObject(event.target));
+						var channel:String = event.target.channel;
+						dispatcher(new LeaveChannelEvent(channel));
+						joinedChannels[channel] = null;
+					});
+					tabs.addChild(channelPanel);
+					tabs.selectedChild = channelPanel;
+					joinedChannels[channel] = channelPanel;
+					dispatcher(new JoinChannelEvent(channel));
+				});
+			}
+			
+			protected function startPrivateChat_clickHandler(event:MouseEvent):void{
+				var inputTitleWindow:InputTitleWindow = InputTitleWindow(PopUpManager.createPopUp(this,InputTitleWindow,true));
+				PopUpManager.centerPopUp(inputTitleWindow);
+				inputTitleWindow.title = "Start private chat";
+				inputTitleWindow.popupText = "Enter nickname";
+				inputTitleWindow.addEventListener("textEntered",function(event:Event):void{
+					openPrivateChatPanel(inputTitleWindow.textEntered);
+				});
+			}
+			
+			[MessageHandler(selector="receive")]
+			public function privateMessageReceived(event:PrivateMessageEvent):void{
+				var privateChatPanel:PrivateChatPanel = openPrivateChatPanel(event.nickname);
+				if(privateChatPanel != null){
+					privateChatPanel.startMessage = event.nickname+":"+event.message;
+				}
+			}
+			
+			protected function openPrivateChatPanel(nickname:String):PrivateChatPanel{
+				if(privateChats[nickname] != null)return null;
+				if(nickname == chatModel.nickname)return null;
+				var privateChatPanel:PrivateChatPanel = new PrivateChatPanel();
+				privateChatPanel.label = nickname;
+				privateChatPanel.nickname = nickname;
+				tabs.addChild(privateChatPanel);
+				tabs.selectedChild = privateChatPanel;
+				privateChats[nickname] = privateChatPanel;
+				privateChatPanel.addEventListener("closePanelEvent",function(event:Event):void{
+					tabs.removeChild(DisplayObject(event.target));
+					privateChats[event.target.nickname] = null;
+				});
+				return privateChatPanel;
+			}
+		]]>
+	</fx:Script>
+	<s:states>
+		<s:State name="login"/>
+		<s:State name="logined"/>
+		<s:State name="registered"/>
+	</s:states>
+	<fx:Declarations>
+		<sf:Configure/>
+	</fx:Declarations>
+	<mx:Grid verticalCenter="0" horizontalCenter="0" includeIn="login">
+		<mx:GridRow>
+			<mx:GridItem>
+				<s:Label text="Nickname:"/>
+			</mx:GridItem>
+			<mx:GridItem>
+				<s:TextInput id="nickname"/>
+			</mx:GridItem>
+		</mx:GridRow>
+		<mx:GridRow>
+			<mx:GridItem>
+				<s:Label text="Password:"/>
+			</mx:GridItem>
+			<mx:GridItem>
+				<s:TextInput id="password"/>
+			</mx:GridItem>
+		</mx:GridRow>
+		<mx:GridRow>
+			<mx:GridItem>
+				<s:Button label="Login" click="login_clickHandler(event)"/>
+			</mx:GridItem>
+		</mx:GridRow>
+	</mx:Grid>
+	<s:VGroup includeIn="logined,registered" width="100%" height="100%">
+		<s:HGroup width="100%">
+			<s:Button label="Logout" click="logout_clickHandler(event)"/>
+			<s:Button label="Join Channel" click="joinChannel_clickHandler(event)"/>
+			<s:Button label="Start Private Chat" click="startPrivateChat_clickHandler(event)"/>
+			<mx:Spacer width="100%"/>
+			<s:Button label="Register nickname" includeIn="logined" click="registerNickname_clickHandler(event)"/>
+			<s:Button label="Change password" includeIn="registered" click="changePassword_clickHandler(event)"/>
+			<s:Button label="View ignored users" includeIn="registered" click="viewIgnoredUsers_clickHandler(event)"/>
+		</s:HGroup>
+		<mx:TabNavigator includeIn="logined,registered" id="tabs" width="100%" height="100%"/>
+	</s:VGroup>
+</s:Group>

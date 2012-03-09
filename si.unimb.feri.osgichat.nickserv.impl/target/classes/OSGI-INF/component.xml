@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" immediate="false" name="si.unimb.feri.osgichat.nickserv.impl">
+   <implementation class="si.unimb.feri.osgichat.nickserv.impl.NickServiceImpl"/>
+   <service>
+      <provide interface="si.unimb.feri.osgichat.nickserv.NickService"/>
+   </service>
+</scr:component>

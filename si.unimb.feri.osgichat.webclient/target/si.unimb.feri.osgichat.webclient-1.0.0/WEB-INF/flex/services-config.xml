@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<services-config>
+	<channels>
+		<channel-definition id="my-amf"
+			class="mx.messaging.channels.AMFChannel">
+			<endpoint
+				url="http://{server.name}:{server.port}/{context.root}/messagebroker/amf"
+				class="flex.messaging.endpoints.AMFEndpoint" />
+			<properties>
+				<polling-enabled>true</polling-enabled>
+				<polling-interval-seconds>0</polling-interval-seconds>
+				<wait-interval-millis>60000</wait-interval-millis>
+				<max-waiting-poll-requests>100</max-waiting-poll-requests>
+			</properties>
+		</channel-definition>
+	</channels>
+</services-config>

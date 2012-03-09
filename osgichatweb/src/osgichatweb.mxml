@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009"
+			   xmlns:sf="http://www.spicefactory.org/parsley"
+			   xmlns:s="library://ns.adobe.com/flex/spark"
+			   xmlns:mx="library://ns.adobe.com/flex/mx" 
+			   xmlns:osgichat="si.unimb.feri.osgichat.*"
+			   minWidth="800" minHeight="600">
+	<fx:Script>
+		<![CDATA[
+			import mx.core.FlexGlobals;
+			import mx.events.FlexEvent;
+			import mx.messaging.ChannelSet;
+			import mx.messaging.channels.AMFChannel;
+			import mx.utils.URLUtil;
+			
+			import si.unimb.feri.osgichat.model.ChatModel;
+			
+			[Bindable]
+			[Inject]
+			public var chatModel:ChatModel;
+			
+			[Inject]
+			public var channelSet:ChannelSet;
+
+			[Init]
+			public function init():void{
+				var url:String = FlexGlobals.topLevelApplication.url;
+				var contextRoot:Boolean = (url.indexOf("webclient")!=-1);
+				url = URLUtil.getServerNameWithPort(url);
+				var channels:Array = new Array();
+				var amfChannel:AMFChannel = new AMFChannel();
+				if(contextRoot)amfChannel.url = "http://"+url+"/webclient/messagebroker/amf";
+				else amfChannel.url = "http://"+url+"/messagebroker/amf";
+				amfChannel.pollingEnabled = true;
+				amfChannel.pollingInterval = 0;
+				channels.push(amfChannel);
+				channelSet.channels = channels;
+			}
+
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<sf:ContextBuilder config="osgichatwebconfig"/>
+		<sf:Configure/>
+	</fx:Declarations>
+	<osgichat:Chat/>
+</s:Application>

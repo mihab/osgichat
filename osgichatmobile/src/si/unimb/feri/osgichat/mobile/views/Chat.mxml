@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!---
+Main mobile chat view which holds channel and private chats panel.
+-->
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009"
+		xmlns:sf="http://www.spicefactory.org/parsley"
+		xmlns:s="library://ns.adobe.com/flex/spark" title="Chat" destructionPolicy="none" 
+		currentState="{(toogleButton.selected)?'newchat':'chat'}">
+	<fx:Script>
+		<![CDATA[
+			import mx.core.IVisualElement;
+			
+			import si.unimb.feri.osgichat.model.ChatModel;
+			import si.unimb.feri.osgichat.events.JoinChannelEvent;
+			import si.unimb.feri.osgichat.events.LeaveChannelEvent;
+			import si.unimb.feri.osgichat.events.LogoutEvent;
+			import si.unimb.feri.osgichat.events.PrivateMessageEvent;
+			import si.unimb.feri.osgichat.mobile.panels.ChannelPanel;
+			import si.unimb.feri.osgichat.mobile.panels.PrivateChatPanel;
+			
+			/**
+			 * Associative array of joined channels
+			 */
+			private var joinedChannels:Object = new Object();
+			
+			/**
+			 * Associative array of private chats
+			 */
+			private var privateChats:Object = new Object();
+			
+			[Bindable]
+			[Inject]
+			public var chatModel:ChatModel;
+			
+			[MessageDispatcher]
+			public var dispatcher:Function;
+			
+			protected function logout_clickHandler(event:MouseEvent):void{
+				dispatcher(new LogoutEvent());
+				navigator.popView();
+			}
+			
+			[MessageHandler]
+			public function logout(event:LogoutEvent):void{
+				joinedChannels = new Object();
+				privateChats = new Object();
+				chats.removeAllElements();
+				prev.enabled = false;
+				next.enabled = false;
+				centerText.text = "";
+			}
+			
+			protected function joinChannel_clickHandler(event:MouseEvent):void{
+				if(channel.text.length == 0)return;
+				if(joinedChannels[channel.text] != null)return;
+				currentState = "chat";
+				toogleButton.selected = false;
+				var channelPanel:ChannelPanel = new ChannelPanel();
+				channelPanel.channel = channel.text;
+				channelPanel.addEventListener("channelClose",function(event:Event):void{
+					var channelPanel:ChannelPanel = ChannelPanel(event.target);
+					joinedChannels[channelPanel.channel] = null;
+					dispatcher(new LeaveChannelEvent(channelPanel.channel));
+					removeChatPanel(channelPanel);
+				});
+				channelPanel.addEventListener("startPrivateChat",function(event:Event):void{
+					var channelPanel:ChannelPanel = ChannelPanel(event.target);
+					if(privateChats[channelPanel.lastNickname] != null)return;
+					if(channelPanel.lastNickname == chatModel.nickname)return;
+					openPrivateChat(channelPanel.lastNickname);
+				});
+				joinedChannels[channel.text] = channelPanel;
+				chats.addElement(channelPanel);
+				showChatPanel(channelPanel);
+				dispatcher(new JoinChannelEvent(channel.text));
+				channel.text = "";
+			}
+			
+			[MessageHandler(selector="receive")]
+			public function privateMessageReceived(event:PrivateMessageEvent):void{
+				if(privateChats[event.nickname] != null)return;
+				var privateChatPanel:PrivateChatPanel = openPrivateChat(event.nickname);
+				privateChatPanel.startMessage = event.nickname+":"+event.message;
+			}
+
+			protected function startPrivateChat_clickHandler(event:MouseEvent):void{
+				if(nickname.text.length == 0)return;
+				if(nickname.text == chatModel.nickname)return;
+				if(privateChats[nickname] != null)return;
+				currentState = "chat";
+				toogleButton.selected = false;
+				openPrivateChat(nickname.text);
+				nickname.text = "";
+			}
+			
+			private function openPrivateChat(nickname:String):PrivateChatPanel{
+				var privateChatPanel:PrivateChatPanel = new PrivateChatPanel();
+				chats.addElement(privateChatPanel);
+				privateChats[nickname] = privateChatPanel;
+				privateChatPanel.nickname = nickname;
+				showChatPanel(privateChatPanel);
+				privateChatPanel.addEventListener("privateChatClose",function(event:Event):void{
+					var privateChatPanel:PrivateChatPanel = PrivateChatPanel(event.target);
+					privateChats[privateChatPanel.nickname] = null;
+					removeChatPanel(privateChatPanel);
+				});
+				return privateChatPanel;
+			}
+			
+			private function showChatPanel(element:IVisualElement):void{
+				for(var i:int=0;i<chats.numElements;i++){
+					chats.getElementAt(i).visible = false;
+				}
+				element.visible = true;
+				if(element is PrivateChatPanel){
+					centerText.text = PrivateChatPanel(element).nickname;
+				}
+				if(element is ChannelPanel){
+					centerText.text = "#"+ChannelPanel(element).channel;
+				}
+				var index:int = chats.getElementIndex(element);
+				if(index>0)prev.enabled = true;
+				else prev.enabled = false;
+				if(index<chats.numElements-1)next.enabled = true;
+				else next.enabled = false;
+			}
+			
+			private function removeChatPanel(element:IVisualElement):void{
+				centerText.text = "";
+				var index:int = chats.getElementIndex(element);
+				chats.removeElement(element);
+				if(chats.numElements == 0)return;
+				if(index > chats.numElements-1)index = chats.numElements-1;
+				showChatPanel(chats.getElementAt(index));
+			}
+
+			protected function prev_clickHandler(event:MouseEvent):void{
+				for(var i:int=0;i<chats.numElements;i++){
+					if(chats.getElementAt(i).visible){
+						showChatPanel(chats.getElementAt(i-1));
+						break;
+					}
+				}
+			}
+
+			protected function next_clickHandler(event:MouseEvent):void{
+				for(var i:int=0;i<chats.numElements;i++){
+					if(chats.getElementAt(i).visible){
+						showChatPanel(chats.getElementAt(i+1));
+						break;
+					}
+				}
+			}
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<sf:Configure/>
+	</fx:Declarations>
+	<s:states>
+		<s:State name="chat"/>
+		<s:State name="newchat"/>
+	</s:states>
+	<s:navigationContent>
+		<s:Button label="Logout" click="logout_clickHandler(event)"/>
+	</s:navigationContent>
+	<s:titleContent>
+		<s:ToggleButton id="toogleButton" label="New chat" width="100%" height="100%"/>
+	</s:titleContent>
+	<s:actionContent>
+		<s:Button label="Options" click="navigator.pushView(si.unimb.feri.osgichat.mobile.views.Options);"/>
+	</s:actionContent>
+	<s:VGroup includeIn="newchat" width="100%" height="100%" horizontalAlign="center" verticalAlign="middle">
+		<s:TextInput id="channel"/>
+		<s:Button label="Join channel" click="joinChannel_clickHandler(event)"/>
+		<s:TextInput id="nickname"/>
+		<s:Button label="Start private chat" click="startPrivateChat_clickHandler(event)"/>
+	</s:VGroup>
+	<s:VGroup includeIn="chat" width="100%" height="100%">
+		<s:HGroup width="100%">
+			<s:Button id="prev" label="Prev" enabled="false" click="prev_clickHandler(event)"/>
+			<s:HGroup width="100%" height="100%" horizontalAlign="center" verticalAlign="middle">
+				<s:Label id="centerText"/>
+			</s:HGroup>
+			<s:Button id="next" label="Next" enabled="false" click="next_clickHandler(event)"/>
+		</s:HGroup>
+		<s:Group id="chats" width="100%" height="100%"/>
+	</s:VGroup>
+</s:View>

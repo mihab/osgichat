@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!---
+Mobile ignored users view with list and controls to add/remove users from/to the list
+-->
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009"
+		xmlns:sf="http://www.spicefactory.org/parsley"
+		xmlns:s="library://ns.adobe.com/flex/spark" title="Ignored users">
+	<fx:Script>
+		<![CDATA[
+			import si.unimb.feri.osgichat.model.ChatModel;
+			import si.unimb.feri.osgichat.events.IgnoreUserEvent;
+			import si.unimb.feri.osgichat.events.UnignoreUserEvent;
+			
+			[Bindable]
+			[Inject]
+			public var chatModel:ChatModel;
+			
+			[MessageDispatcher]
+			public var dispatcher:Function;
+
+			protected function ignore_clickHandler(event:MouseEvent):void{
+				if(textInput.text.length == 0)return;
+				if(chatModel.nickname == textInput.text)return;
+				if(chatModel.ignoredUsers.contains(textInput.text))return;
+				dispatcher(new IgnoreUserEvent(textInput.text));
+				textInput.text = "";
+			}
+
+			protected function unignore_clickHandler(event:MouseEvent):void{
+				dispatcher(new UnignoreUserEvent(list.selectedItem));
+			}
+
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<sf:Configure/>
+	</fx:Declarations>
+	<s:navigationContent>
+		<s:Button label="Back" click="navigator.popView()"/>
+	</s:navigationContent>
+	<s:VGroup width="100%" height="100%" horizontalAlign="center">
+		<s:List id="list" width="100%" height="100%" dataProvider="{chatModel.ignoredUsers}"/>
+		<s:Button label="Unignore" enabled="{list.selectedItem!=null}" click="unignore_clickHandler(event)"/>
+		<s:TextInput id="textInput" change="(textInput.text.length>0)?ignore.enabled=true:ignore.enabled=false"/>
+		<s:Button id="ignore" label="Ignore" enabled="false" click="ignore_clickHandler(event)"/>
+	</s:VGroup>
+</s:View>
