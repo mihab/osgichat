@@ -19,3 +19,6 @@ A short description of every project follows. All of the projects are Eclipse pr
 
 ## Building ##
 Maven is used to build the projects. The easiest and quickest way to build the application is to build all of the projects and install them into the local Maven repository. The Flex client needs to be compiled manually with the Flex SDK (or with the help of the Flash Builder) and copied to the appropriate web application/module folder or packaged as an AIR application and installed on the desktop/mobile device (the projects were built and tested using a prerelease version of the Adobe Flex 4.5 SDK so there might be differences between the prerelease and the stable final release build of the Flex 4.5 SDK as well).
+
+## Running ##
+You can run the application with Server-Side Equinox deployed on Jetty [here.](http://osgichat.herokuapp.com/)
